@@ -1,31 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import classNames from 'classnames';
 import { UserWarning } from './UserWarning';
 import { USER_ID, getTodos, uploadTodo } from './api/todos';
-
-// Types
-import { Todo } from './types/Todo';
+import { Todo, emptyTodo } from './types/Todo';
 import { TodoStatus } from './types/TodoStatus';
 import { ErrorType } from './types/Errors';
-
-// Components
 import { Header } from './components/Header';
 import { TodoList } from './components/TodoList';
 import { Footer } from './components/Footer';
-
-import classNames from 'classnames';
-
-
-const emptyTodo: Omit<Todo, 'id'> = {
-  completed: false,
-  userId: USER_ID,
-  title: '',
-};
-
-const TodoStatusRoutes: Record<TodoStatus, string> = {
-  [TodoStatus.All]: '/',
-  [TodoStatus.Active]: '/active',
-  [TodoStatus.Completed]: '/completed',
-};
+import { filterTodosByStatus } from './utils/helpers';
+import { TodoStatusRoutes } from './constants/TodoRoutes';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -50,19 +34,10 @@ export const App: React.FC = () => {
     }
   }, [errorMessage]);
 
-  const filteredTodos = useMemo(() => {
-    switch (selectedTodoStatus) {
-      case TodoStatus.Active:
-        return todos.filter(todo => !todo.completed);
-
-      case TodoStatus.Completed:
-        return todos.filter(todo => todo.completed);
-
-      default:
-        return todos;
-    }
-  }, [selectedTodoStatus, todos]);
-
+  const filteredTodos = useMemo(() =>
+    filterTodosByStatus(todos, selectedTodoStatus),
+    [selectedTodoStatus, todos]
+  );
   const closeErrorHandler = () => {
     setErrorMessage('');
   };
