@@ -18,6 +18,8 @@ export const Footer: React.FC<FooterProps> = ({
   filteringTodosByActiveStatus,
   TodoStatusRoutes,
 }) => {
+  const itemLabel = filteringTodosByActiveStatus !== 1 ? 'items' : 'item';
+
   if (todos.length === 0) {
     return null;
   }
@@ -25,11 +27,11 @@ export const Footer: React.FC<FooterProps> = ({
   return (
     <footer className="todoapp__footer" data-cy="Footer">
       <span className="todo-count" data-cy="TodosCounter">
-        {filteringTodosByActiveStatus} item{filteringTodosByActiveStatus !== 1 ? 's' : ''} left
+        {filteringTodosByActiveStatus} {itemLabel} left
       </span>
 
       <nav className="filter" data-cy="Filter">
-        {Object.keys(TodoStatusRoutes).map((status) => (
+        {Object.keys(TodoStatusRoutes).map(status => (
           <a
             key={status}
             href={`#${TodoStatusRoutes[status as TodoStatus]}`}

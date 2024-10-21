@@ -18,28 +18,29 @@ export const App: React.FC = () => {
   const [selectedTodoStatus, setSelectedTodoStatus] = useState<TodoStatus>(
     TodoStatus.All,
   );
-  const [errorMessage, setErrorMessage] = useState<ErrorType | ''>('');
+  const [errorMessage, setErrorMessage] = useState<ErrorType>(
+    ErrorType.DEFAULT,
+  );
 
   useEffect(() => {
-    getTodos()
-      .then(setTodos)
-      .catch(() => setErrorMessage(ErrorType.LOAD_TODOS));
-  }, []);
+    if (errorMessage.length) {
+      const timeoutId = setTimeout(
+        () => setErrorMessage(ErrorType.DEFAULT),
+        3000,
+      );
 
-  useEffect(() => {
-    if (!errorMessage.length) {
-      setTimeout(() => {
-        setErrorMessage('');
-      }, 3000);
+      return () => {
+        clearTimeout(timeoutId);
+      };
     }
   }, [errorMessage]);
 
-  const filteredTodos = useMemo(() =>
-    filterTodosByStatus(todos, selectedTodoStatus),
-    [selectedTodoStatus, todos]
+  const filteredTodos = useMemo(
+    () => filterTodosByStatus(todos, selectedTodoStatus),
+    [selectedTodoStatus, todos],
   );
   const closeErrorHandler = () => {
-    setErrorMessage('');
+    setErrorMessage(ErrorType.DEFAULT);
   };
 
   const handleStatusChange = (status: TodoStatus) => {
@@ -50,7 +51,7 @@ export const App: React.FC = () => {
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       setIsLoading(true);
-      setErrorMessage('');
+      setErrorMessage(ErrorType.DEFAULT);
 
       uploadTodo(newTodo)
         .then(todo => {
@@ -69,7 +70,7 @@ export const App: React.FC = () => {
 
   const changeTodoHandler = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setErrorMessage('');
+      setErrorMessage(ErrorType.DEFAULT);
       setNewTodo(current => ({
         ...current,
         title: e.target.value,
@@ -83,9 +84,19 @@ export const App: React.FC = () => {
     [todos],
   );
 
+  useEffect(() => {
+    if (!USER_ID) {
+      return;
+    }
+    getTodos()
+      .then(setTodos)
+      .catch(() => setErrorMessage(ErrorType.LOAD_TODOS));
+  }, []);
+
   if (!USER_ID) {
     return <UserWarning />;
   }
+
 
   return (
     <div className="todoapp">
@@ -113,7 +124,7 @@ export const App: React.FC = () => {
         data-cy="ErrorNotification"
         className={classNames(
           'notification is-danger is-light has-text-weight-normal',
-          { hidden: errorMessage.length === 0 },
+          { hidden: !errorMessage.length },
         )}
       >
         <button
